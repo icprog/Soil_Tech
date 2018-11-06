@@ -289,13 +289,38 @@ void AdcHandle(void)
 	uint16_t adc_data[4] = {0};
 	float 	 SensorBuf[4] = {0};	
 	
-	adc_data[0] = GetAdcData(ADC_CHANNEL_VREFINT, BUFLEN); //内部采样
+	uint32_t MuilpData = 0;
 	
-	adc_data[1] = GetAdcData(ADC_CHANNEL_1, BUFLEN);  ///外部基准
+	uint8_t counter = 0;
 	
-	adc_data[2] = GetAdcData(ADC_CHANNEL_5, BUFLEN); ///湿度
+	///复合滤波算法
+	for(counter = 0; counter < 20; ++counter) ///均值
+	{
+		MuilpData += GetAdcData(ADC_CHANNEL_VREFINT, BUFLEN); //(中值法)内部采样
+	}
+	adc_data[0] = MuilpData/counter;
+	MuilpData = 0;
 	
-	adc_data[3] = GetAdcData(ADC_CHANNEL_6, BUFLEN); ///温度
+	for(counter = 0; counter < 20; ++counter)
+	{
+		MuilpData += GetAdcData(ADC_CHANNEL_1, BUFLEN);  ///外部基准
+	}
+	adc_data[1] = MuilpData/counter;
+	MuilpData = 0;
+	
+	for(counter = 0; counter < 20; ++counter)
+	{
+		MuilpData += GetAdcData(ADC_CHANNEL_5, BUFLEN); ///湿度		
+	}
+	adc_data[2] = MuilpData/counter;
+	MuilpData = 0;
+	
+	for(counter = 0; counter < 20; ++counter)
+	{
+		MuilpData += GetAdcData(ADC_CHANNEL_6, BUFLEN); ///温度
+	}
+	adc_data[3] = MuilpData/counter;
+	MuilpData = 0;
 							
 	Vchannel = VFULL * adc_data[0] * VREFEXT_CAL_VREF;
 	
